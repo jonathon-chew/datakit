@@ -3,7 +3,7 @@ import sys
 from pyflags.flag import Flags
 
 flag = Flags()
-flag.add_file(["--file"], "What file do you want to parse", validator=lambda x: ".csv" in x)
+flag.add_file(["--file"], "What file do you want to parse", validator=lambda x: ".csv" in x, required=True)
 flag.add(["--top"], "List the top n number of values", int)
 flag.add(["--corr-threshold"], "How strong should the correclation be", float)
 flag.add(["--include"], "What columns to include", str)
