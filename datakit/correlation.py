@@ -15,6 +15,15 @@ def correlation(x: list[int], y: list[int]) -> float:
     R = 4(12258) - (151)(336) / √[4(5625)-(151)²][4(28724)-(336)²]       
     """
 
+    if len(x) != len(y):
+        raise ValueError("[ERROR]: x and y are not the same length")
+    
+    if len(x) == 0:
+        raise ValueError("[ERROR]: x is empty")
+
+    if len(y) == 0:
+        raise ValueError("[ERROR]: y is empty")
+
     n = len(x)
     xSum = sum(x)
     ySum = sum(y)
