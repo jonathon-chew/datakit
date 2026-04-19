@@ -27,6 +27,17 @@ class Flags:
         self.required_flags = [] # str
         self.interactive_mode = False
 
+    def __getattr__(self, name) -> Any:
+        try:
+            if name in self.flag_values.keys():
+                return self.flag_values[name].value
+            
+            check_me = {k.replace("--", ""): v for k, v in self.flag_values.items()}
+            return check_me[name].value
+            
+        except:
+             raise AttributeError(f"No such attribute: {name}")
+
     def _helper_string(
         self, 
         helper:str, 
@@ -144,6 +155,7 @@ class Flags:
         
         if required and canonical_name not in self.required_flags:
             self.required_flags.append(canonical_name)
+        pass
 
     def add_string(
         self, 
