@@ -50,4 +50,4 @@ def correlation(x: list[int], y: list[int]) -> float:
 x = [40, 25, 22, 54]
 y = [99, 79, 69, 89]
 
-print(correlation(x, y))
+# print(correlation(x, y))
