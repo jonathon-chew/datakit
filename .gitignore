@@ -1,4 +1,9 @@
+# Folders
 *venv
+docs/*
 __pycache__
+Adonis
+
+# Files
 *.csv
 todo.md
