@@ -2,7 +2,7 @@ from itertools import combinations
 
 import pandas as pd
 
-import cli, correlation, Top, ProfileColumn
+import cli, correlation, ProfileColumn, Adonis
 
 fileName = cli.flag.file
 df = pd.read_csv(fileName)
@@ -15,7 +15,7 @@ print(f"Rows: {rows}")
 print(f"Columns: {len(columns)}")
 
 intColumns = []
-threshold = cli.flag.get_value("--corr-threshold")
+threshold = cli.flag.corr_threshold
 
 print("━━━ Column Overview ━━━")
 for column in columns:
@@ -23,24 +23,16 @@ for column in columns:
 
     profile = ProfileColumn.ProfileColumn(df, column, rows, cli.flag.top)
 
-    print(profile["kind"], profile["role"])
-
-    if profile["kind"] == "numeric":
-        if profile["role"] != "identifier":
-            print(profile["stats"])
-            intColumns.append(column)
-
-    if profile.get("imbalence", False):
-        print("Imbalence:", profile["imbalence"])
-    
-    if profile.get("TopValues", False):
-        print(', '.join(profile["TopValues"]))
-
+    Adonis.PrintTable(profile)
     print()
 
 if len(intColumns) > 1:
     combos = combinations(intColumns, 2)
     for eachCombo in combos:
-        R = correlation.correlation(df[eachCombo[0]].dropna(), df[eachCombo[1]].dropna())
-        if abs(R) > float(threshold) :
-            print("Signifcant Correlation: ", eachCombo[0], eachCombo[1], R)
+        try:
+            clear_df = df.dropna(subset=[eachCombo[0], eachCombo[1]])
+            R = correlation.correlation(clear_df[eachCombo[0]].to_list(), clear_df[eachCombo[1]].to_list())
+            if abs(R) > float(threshold) :
+                print("Signifcant Correlation: ", eachCombo[0], eachCombo[1], R)
+        except Exception as e:
+            print(f"There was an error: {e}")
