@@ -1,14 +1,14 @@
 from json import dumps
 from pathlib import Path
-from typing import Callable, Any
+from typing import Callable, Any, get_origin, get_args
 
 class flag:
     def __init__(
         self, 
         canonical_name: str, 
-        value: str|int|bool|float|None = None, 
+        value: Any|None = None, 
         value_type: type=str, 
-        choices: list[str|int|bool|float] | None = None,
+        choices: list[Any] | None = None,
         validator: Callable[[Any], bool] | None = None,
         custom_parse: Callable[[Any], Any] | None = None
     )-> None: 
@@ -32,16 +32,20 @@ class Flags:
             if name in self.flag_values.keys():
                 return self.flag_values[name].value
             
-            check_me = {k.replace("--", ""): v for k, v in self.flag_values.items()}
+            check_me = {self._normalize(k): v for k, v in self.flag_values.items()}
             return check_me[name].value
             
         except:
              raise AttributeError(f"No such attribute: {name}")
 
+
+    def _normalize(self, name: str) -> str:
+        return name.lstrip("-").replace("-", "_")
+
     def _helper_string(
         self, 
         helper:str, 
-        default:str|int|bool|float|None = None, 
+        default:Any|None = None, 
         value_type:type=str
     ) -> str:
         """
@@ -49,7 +53,7 @@ class Flags:
         """
         return f"{helper}\nType: {value_type}\nDefault Value is set as: {default}"
     
-    def _convert(self, value: str = "", target_type: str|int|bool|float|None = None) -> type | None:
+    def _convert(self, value: str = "", target_type: Any|None = None) -> Any | None:
         """
         Handling type conversion for supported input typess
         """
@@ -91,6 +95,11 @@ class Flags:
         """
         Internal function for ascertaining whether to use the supported internal logic to convert the type to the right value OR the passed in function
         """
+        inner_type = self._get_list_inner_type(flag.value_type)
+
+        if inner_type is not None:
+            return self._convert(raw, inner_type)
+        
         if flag.custom_parse:
             return flag.custom_parse(raw)
         return self._convert(raw, flag.value_type)
@@ -113,7 +122,14 @@ class Flags:
         if current_key in self.required_flags:
             self.required_flags.remove(current_key)
         
-        current_flag.value = value
+        inner_type = self._get_list_inner_type(current_flag.value_type)
+
+        if inner_type is not None:
+            if current_flag.value is None:
+                current_flag.value = []
+            current_flag.value.append(value)
+        else:
+            current_flag.value = value
     
     def _add_missing_key(self, key: str) -> None:
         """
@@ -125,12 +141,26 @@ class Flags:
         parseed_value = self._parse_value(info, self.flag_values[key])
         self._set_flag_value(self.flag_values[key], parseed_value, key)
     
+
+    def _get_list_inner_type(self, value_type):
+        origin = get_origin(value_type)
+
+        # Case 1: list[str], list[int], etc.
+        if origin is list:
+            return get_args(value_type)[0]
+
+        # Case 2: plain list → default to str
+        if value_type == list:
+            return str
+
+        return None
+    
     def add(
             self, 
             names: list[str], 
             helper: str, 
-            value_type: type, 
-            default: str|int|bool|float|None = None, 
+            value_type: Any, 
+            default: Any|None = None, 
             required: bool=False, 
             choices: list[Any] | None = None,
             validator: Callable[[Any], bool] | None = None,
@@ -140,9 +170,10 @@ class Flags:
         The basis of the logic - make a flag and all it's aliases and set all the values
         """
         canonical_name = names[0]
+        inner_type = self._get_list_inner_type(value_type)
         shared_flag = flag(
             canonical_name=canonical_name,
-            value=default,
+            value=[] if inner_type is not None else default,
             value_type=value_type,
             choices=choices,
             validator=validator,
@@ -155,7 +186,6 @@ class Flags:
         
         if required and canonical_name not in self.required_flags:
             self.required_flags.append(canonical_name)
-        pass
 
     def add_string(
         self, 
@@ -279,7 +309,8 @@ class Flags:
 
                 self._set_flag_value(current_flag, parsed_value, current_key)
 
-                current_key = ""
+                if self._get_list_inner_type(current_flag.value_type) is None:
+                    current_key = ""
                 
     def parse_and_resolve(self, parse_arguments: list[str]) -> None:
         self.activate_interactive_mode()
@@ -297,7 +328,7 @@ class Flags:
             else:
                 _ = [self._add_missing_key(missing_flag) for missing_flag in missing if self.flag_values[missing_flag].value is None]
     
-    def get_flags(self) -> dict[str, str | int | bool | float]:
+    def get_flags(self) -> dict[str, str | int | bool | float | list]:
         """
         Useful for debuging, showing currently set states of all passed in flags
         """
@@ -331,7 +362,7 @@ class Flags:
 
         return flag.value
     
-    def get_optional(self, key: str, default: Any) -> str | int | bool | float:
+    def get_optional(self, key: str, default: Any) -> str | int | bool | float | list:
         """
         Call this function if you want to check if the user chose something or not, and set a default if they did not
         
@@ -344,7 +375,7 @@ class Flags:
         flag = self.flag_values[key]
         return flag.value if flag.value is not None else default
     
-    def get_value(self, key: str) -> str | int | bool | float:
+    def get_value(self, key: str) -> str | int | bool | float | list:
         """
         Call this function if you don't want the user to be prompted if the flag is not set AND the value MUST be set with no fall back if not
         

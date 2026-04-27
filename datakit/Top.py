@@ -17,7 +17,7 @@ def Top(a: list[Any], k: int = 1) -> list[str]:
         if x in hash.keys():
             hash[x] += 1
     
-    _list = sorted(hash.items(), key=lambda item: item[1])
+    _list = sorted(hash.items(), key=lambda item: (-item[1], str(item[0])))
 
     return [str(ans[0]) for ans in _list[0:k]]
 
@@ -27,7 +27,7 @@ def Imbalence(a: list[Any], number_of_rows: int=0, threshold: float=0.7) -> dict
     """
     # top_ratio = count(top_value) / total_rows
     
-    if len(a) < number_of_rows:
+    if number_of_rows <= 0 or len(a) < number_of_rows:
         number_of_rows = len(a)
 
     unique: set[str] = set(a)
