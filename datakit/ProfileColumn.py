@@ -2,7 +2,7 @@ from typing import Any
 
 import pandas as pd
 
-import Top
+from .Top import Top, Imbalence
 
 def isNumeric(i: list[Any]) -> bool:
     
@@ -67,7 +67,7 @@ def ProfileColumn(df: pd.DataFrame, column: str, row_count: int=0, top: int=0) -
     
     # optional signals
     # imbalance → None | moderate | high
-    imbalence = Top.Imbalence(populated.to_list(), len(populated.index), 0.7)
+    imbalence = Imbalence(populated.to_list(), len(populated.index), 0.7)
     if imbalence:
         returnDict["imbalence"] = f"high {imbalence}"
 
@@ -85,6 +85,6 @@ def ProfileColumn(df: pd.DataFrame, column: str, row_count: int=0, top: int=0) -
     # categorical only
     #top_values
     if returnDict["kind"] == "categorical" and uniqueRatio < 0.5 and top > 0:
-        returnDict["TopValues"] = Top.Top(populated.to_list(), top)
+        returnDict["TopValues"] = Top(populated.to_list(), top)
 
     return returnDict
