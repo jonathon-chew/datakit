@@ -28,7 +28,7 @@ Datakit provides instant insights into your data including:
 Clone the repository:
 
 ```bash
-git clone <your-repo-url>
+git clone github.com/jonathon-chew/datakit
 cd datakit
 ```
 

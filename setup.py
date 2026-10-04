@@ -11,5 +11,11 @@ A fast, CLI-first dataset profiling tool for quickly understanding CSV files.
     author_email="jonchew626@hotmail.com",
     url="https://github.com/jonathon-chew/datakit",
     package_dir={"": "src"},
-    packages=find_packages(exclude=("tests*")),
+    packages=find_packages(where="src", exclude=("tests*")),
+
+    entry_points={
+        "console_scripts": [
+            "datakit=datakit.cli:main",
+        ],
+    },
 )

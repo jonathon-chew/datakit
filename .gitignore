@@ -4,6 +4,8 @@ docs/*
 __pycache__
 Adonis
 pyflags
+build
+src/datakit.egg-info
 
 # Files
 *.csv
