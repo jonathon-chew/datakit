@@ -8,3 +8,4 @@ pyflags
 # Files
 *.csv
 todo.md
+src/datakit.egg-info/
